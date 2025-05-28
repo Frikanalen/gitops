@@ -4,14 +4,3 @@ service:
 
 dashboard:
   enabled: true
-
-ports:
-  web:
-    redirectTo: websecure
-
-entryPoints:
-  web:
-    address: ":80"
-  websecure:
-    address: ":443"
-

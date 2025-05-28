@@ -8,9 +8,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://helm.traefik.io/charts
+    repoURL: https://traefik.github.io/charts
     chart: traefik
-    targetRevision: v35.3.0
+    targetRevision: v35.4.0
     helm:
       valuesFile: values.yaml
   destination:
