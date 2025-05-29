@@ -14,17 +14,6 @@ spec:
         speaker:
           frr:
             enabled: false
-        crds:
-          ippools:
-            - name: default
-              spec:
-                addresses:
-                  - 158.36.191.228-158.36.191.228
-          l2advertisements:
-            - name: default
-              spec:
-                ipAddressPools:
-                  - default
   destination:
     server: https://kubernetes.default.svc
     namespace: metallb-system
@@ -41,3 +30,22 @@ spec:
       name: bgppeers.metallb.io
       jsonPointers:
         - /spec/conversion/webhook/clientConfig/caBundle
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: default
+  namespace: metallb-system
+spec:
+  addresses:
+    - 158.36.191.228-158.36.191.228
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: default
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - default
+
