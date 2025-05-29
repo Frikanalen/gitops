@@ -1,7 +1,40 @@
-configInline:
-  address-pools:
-    - name: default
-      protocol: layer2
-      addresses:
-        - 158.36.191.228-158.36.191.228
+# Denne filen er basically defaults; jeg har bevart dem vi vi
 
+prometheus:
+  metricsPort: 7472
+
+  # Prometheus Operator alertmanager alerts
+  prometheusRule:
+    # enable alertmanager alerts
+    enabled: false
+
+controller:
+  enabled: true
+  #
+  # -- Controller log level. Must be one of: `all`, `debug`, `info`, `warn`, `error` or `none`
+  logLevel: debug
+
+# speaker contains configuration specific to the MetalLB speaker
+# daemonset.
+speaker:
+  enabled: true
+  # command: /speaker
+  # -- Speaker log level. Must be one of: `all`, `debug`, `info`, `warn`, `error` or `none`
+  logLevel: debug
+
+  # frr contains configuration specific to the MetalLB FRR container,
+  # for speaker running alongside FRR.
+  frr:
+    enabled: false
+
+crds:
+  ippools:
+    - name: default
+      spec:
+        addresses:
+          - 158.36.191.228-158.36.191.228
+  l2advertisements:
+    - name: default
+      spec:
+        ipAddressPools:
+          - default
