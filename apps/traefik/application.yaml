@@ -14,9 +14,9 @@ spec:
     helm:
       values: |
         service:
-          type: ClusterIP
-          externalIPs:
-          - 158.36.191.228
+          type: LoadBalancer
+          loadBalancerIp: 158.36.191.228
+          externalTrafficPolicy: Local
 
         dashboard:
           enabled: true
