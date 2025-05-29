@@ -12,7 +12,7 @@ spec:
     chart: traefik
     targetRevision: v35.4.0
     helm:
-      values:
+      values: |
         service:
           type: LoadBalancer
 

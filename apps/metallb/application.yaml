@@ -10,7 +10,7 @@ spec:
     chart: metallb
     targetRevision: v0.14.9
     helm:
-      values:
+      values: |
         speaker:
           frr:
             enabled: false
