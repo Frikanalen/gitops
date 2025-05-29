@@ -13,6 +13,9 @@ spec:
     targetRevision: v35.4.0
     helm:
       values: |
+        persistence:
+          enabled: true
+
         service:
           type: LoadBalancer
 
