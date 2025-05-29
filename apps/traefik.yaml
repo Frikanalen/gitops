@@ -16,6 +16,12 @@ spec:
         persistence:
           enabled: true
 
+        securityContext:
+          readOnlyRootFilesystem: false
+          runAsGroup: 0
+          runAsUser: 0
+          runAsNonRoot: false
+
         deployment:
           initContainers:
           - name: volume-permissions
