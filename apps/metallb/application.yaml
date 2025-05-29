@@ -10,7 +10,21 @@ spec:
     chart: metallb
     targetRevision: v0.14.9
     helm:
-      valuesFile: values.yaml
+      values:
+        speaker:
+          frr:
+            enabled: false
+        crds:
+          ippools:
+            - name: default
+              spec:
+                addresses:
+                  - 158.36.191.228-158.36.191.228
+          l2advertisements:
+            - name: default
+              spec:
+                ipAddressPools:
+                  - default
   destination:
     server: https://kubernetes.default.svc
     namespace: metallb-system

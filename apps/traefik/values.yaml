@@ -1,6 +1,0 @@
-service:
-  type: LoadBalancer
-  loadBalancerIP: 158.36.191.228
-
-dashboard:
-  enabled: true

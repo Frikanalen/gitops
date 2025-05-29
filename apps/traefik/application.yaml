@@ -12,7 +12,12 @@ spec:
     chart: traefik
     targetRevision: v35.4.0
     helm:
-      valuesFile: values.yaml
+      values:
+        service:
+          type: LoadBalancer
+
+        dashboard:
+          enabled: true
   destination:
     server: https://kubernetes.default.svc
     namespace: traefik
