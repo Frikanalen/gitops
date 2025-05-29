@@ -20,4 +20,10 @@ spec:
       selfHeal: true
     syncOptions:
     - CreateNamespace=true
-
+  # Or it detects the regenerated key as being out of sync
+  ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      name: bgppeers.metallb.io
+      jsonPointers:
+        - /spec/conversion/webhook/clientConfig/caBundle
