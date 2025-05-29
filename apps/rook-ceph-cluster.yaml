@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rook-ceph-cluster
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://charts.rook.io/release
+    chart: rook-ceph-cluster
+    targetRevision: v1.17
+    helm:
+      values: |
+        cephClusterSpec:
+          storage:
+            useAllDevices: false
+            nodes:
+              - name: tx2
+                devices:
+                  - name: /dev/disk/by-partuuid/45b774bf-df61-4af1-b702-a4564e9091e0
+          mon:
+            count: 1
+          mgr:
+            count: 1
+          dashboard:
+            enabled: true
+          monitoring:
+            enabled: true
+      parameters:
+        - name: operatorNamespace
+          value: rook-ceph
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: rook-ceph
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
