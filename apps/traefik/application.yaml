@@ -15,7 +15,7 @@ spec:
       values: |
         service:
           type: LoadBalancer
-          loadBalancerIp: 158.36.191.228
+          loadBalancerIP: 158.36.191.228
           externalTrafficPolicy: Local
 
         dashboard:
