@@ -16,6 +16,14 @@ spec:
         persistence:
           enabled: true
 
+        initContainers:
+        - name: volume-permissions
+          image: busybox:1.35.0
+          command: ["sh", "-c", "chmod -Rv 600 /data/*"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+
         certificatesResolvers:
           letsencrypt:
             acme:
@@ -26,6 +34,9 @@ spec:
 
         dashboard:
           enabled: true
+
+        podSecurityContext:
+          fsGroup: null
   destination:
     server: https://kubernetes.default.svc
     namespace: traefik
