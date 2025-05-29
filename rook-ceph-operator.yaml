@@ -11,6 +11,8 @@ spec:
     targetRevision: v1.17
     helm:
       values: |-
+        csi:
+          kubeletDirPath: /var/snap/microk8s/common/var/lib/kubelet
         # Paste your values.yaml content here, e.g.:
         # dashboard:
         #   enabled: true
