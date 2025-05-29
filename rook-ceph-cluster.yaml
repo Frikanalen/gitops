@@ -11,21 +11,46 @@ spec:
     targetRevision: v1.17
     helm:
       values: |
+        configOverride: |
+          [global]
+          osd_pool_default_size = 1
+          osd_pool_default_min_size = 1
+
+        toolbox:
+          enabled: true
         cephClusterSpec:
           storage:
             useAllDevices: false
+            useAllNodes: false
             nodes:
               - name: tx2
                 devices:
-                  - name: /dev/disk/by-partuuid/45b774bf-df61-4af1-b702-a4564e9091e0
+                  - name: "/dev/disk/by-partuuid/45b774bf-df61-4af1-b702-a4564e9091e0"
           mon:
-            count: 1
+            allowMultiplePerNode: true
           mgr:
-            count: 1
+            allowMultiplePerNode: true
           dashboard:
             enabled: true
           monitoring:
             enabled: true
+          cephBlockPools:
+            - name: ceph-blockpool
+              spec:
+                replicated:
+                  size: 1
+                  requireSafeReplicaSize: false
+          cephObjectStores:
+            - name: ceph-objectstore
+              spec:
+                metadataPool:
+                  replicated:
+                    size: 1
+                    requireSafeReplicaSize: false
+                dataPool:
+                  replicated:
+                    size: 1
+                    requireSafeReplicaSize: false
       parameters:
         - name: operatorNamespace
           value: rook-ceph
