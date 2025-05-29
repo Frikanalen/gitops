@@ -16,6 +16,11 @@ spec:
         persistence:
           enabled: true
 
+        certificatesResolvers:
+          letsencrypt:
+            acme:
+              storage: /data/acme.json
+
         service:
           type: LoadBalancer
 
