@@ -1,6 +1,13 @@
-nfs:
+storageClassName: nfs-pgbackup
+
+accessModes:
+  - ReadWriteMany
+
+persistentVolume:
   capacity: "3Ti"
+  nfs:
+    path: /tank/k8s
+    server: 192.168.3.59
+
+persistentVolumeClaim:
   request: "100Gi"
-  server: 192.168.3.59
-  path: /tank/k8s
-  namespace: kubegres
