@@ -1,0 +1,32 @@
+# 
+# Allows us to use versioned docker images in argocd applications.
+# https://argocd-image-updater.readthedocs.io/en/stable/
+#
+# Just annotate applications like this:
+#
+# metadata:
+#  annotations:
+#    argocd-image-updater.argoproj.io/image-list: ghcr.io/frikanalen/django-api
+#    argocd-image-updater.argoproj.io/ghcr.io/frikanalen/django-api.update-strategy: latest
+#
+# and it will update ArgoCD state.
+#
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-image-updater
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/argoproj-labs/argocd-image-updater
+    targetRevision: stable
+    path: manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
