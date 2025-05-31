@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: https://github.com/Frikanalen/gitops.git
     targetRevision: main
-    path: apps/db-backup-volume
+    path: helm/db-backup-volume
     helm:
       valueFiles:
         - values.yaml
