@@ -1,0 +1,6 @@
+nfs:
+  capacity: "3Ti"
+  request: "100Gi"
+  server: 192.168.3.59
+  path: /tank/k8s
+  namespace: kubegres

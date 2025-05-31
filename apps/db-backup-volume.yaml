@@ -1,0 +1,23 @@
+# apps/app-db-backup-volume.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: db-backup-volume
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Frikanalen/gitops.git
+    targetRevision: main
+    path: apps/db-backup-volume
+    helm:
+      valueFiles:
+        - values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: database
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
