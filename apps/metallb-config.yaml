@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metallb-config
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Frikanalen/gitops.git
+    targetRevision: main
+    path: helm/metallb-config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kubegres
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
