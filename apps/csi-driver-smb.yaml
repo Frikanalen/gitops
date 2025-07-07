@@ -16,6 +16,10 @@ spec:
         linux:
           kubelet: /var/snap/microk8s/common/var/lib/kubelet
 
+        controller:
+          runOnMaster: true
+          runOnControlPlane: true
+
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system
