@@ -73,7 +73,12 @@ data:
           -rtsp_transport tcp -fflags nobuffer -flags low_delay
           -analyzeduration 250000 -probesize 262144
           -i "rtsp://127.0.0.1:$RTSP_PORT/contrib/live/$G1"
-          -map 0:v:0 -map 0:a:0? -c:v copy
+          -map 0:v:0 -map 0:a:0?
+          -vf scale=-2:{{ .Values.preview.videoHeight }} -pix_fmt yuv420p
+          -c:v libvpx -deadline realtime -cpu-used 8 -lag-in-frames 0
+          -auto-alt-ref 0 -error-resilient 1
+          -b:v {{ .Values.preview.videoBitrate }} -maxrate {{ .Values.preview.videoBitrate }}
+          -force_key_frames "expr:gte(t,n_forced)"
           -c:a libopus -application lowdelay
           -frame_duration {{ .Values.preview.opusFrameDuration }}
           -b:a {{ .Values.preview.opusBitrate }} -ar 48000 -ac 2

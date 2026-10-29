@@ -34,6 +34,10 @@ preview:
   enabled: false
   # Replaces image above while enabled: the same MediaMTX build plus FFmpeg.
   image: bluenviron/mediamtx:1.21.3-ffmpeg
+  # Every WebRTC browser can decode VP8, Firefox included without its
+  # OpenH264 plugin, so the preview is a small VP8 copy of the picture.
+  videoHeight: 360
+  videoBitrate: 1M
   opusBitrate: 96k
   opusFrameDuration: 10
   # How long a reader waits for the converter's first packets, and how long
