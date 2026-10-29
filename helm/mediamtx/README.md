@@ -7,8 +7,8 @@ forwarding. The existing Application name and Kubernetes resource names remain
 
 ## Streams and authentication
 
-- Contributions: `live/<source UUID>`, published over SRT, RTMP or RTSP.
-- Derived browser previews: `preview/<source UUID>`, H.264 plus Opus.
+- Contributions: `contrib/live/<source UUID>`, published over SRT, RTMP or RTSP.
+- Derived browser previews: `contrib/preview/<source UUID>`, H.264 plus Opus.
 - Django authorizes every media connection at `/api/mediamtx/auth`.
 - Publish credentials can publish only the contribution. Read credentials can
   read the contribution and derived preview for their own source.
@@ -22,18 +22,24 @@ those public URLs in Django admin. Anonymous media reads are not enabled.
 
 ## WebRTC with standard Ingress
 
-Set `webrtc.enabled`, `webrtc.hostname` and `webrtc.additionalHosts` to enable:
+Set `webrtc.enabled`, `webrtc.hostname` and `webrtc.additionalHosts` to enable.
+`webrtc.hostname` is the site's own hostname; MediaMTX gets `/contrib` on it:
 
-- Player: `https://<site>/preview/<source UUID>/`
-- WHEP: `https://<site>/preview/<source UUID>/whep`
-- Direct original player/WHEP/WHIP: the same native paths under `/live/<UUID>`.
+- Player: `https://<site>/contrib/preview/<source UUID>/`
+- WHEP: `https://<site>/contrib/preview/<source UUID>/whep`
+- Direct original player/WHEP/WHIP: the same native paths under
+  `/contrib/live/<UUID>`.
 
-The standard `networking.k8s.io/v1` Ingress reserves `/live` and `/preview` for
-MediaMTX. It preserves paths and Location headers, so WHEP PATCH/DELETE session
-URLs work without a proxy sidecar, rewrite middleware or IngressRoute CRD.
-Traefik terminates HTTPS using the site's existing hostname/certificate. Its
+Every MediaMTX path starts with `contrib/`, so the standard
+`networking.k8s.io/v1` Ingress forwards the `/contrib` prefix without rewriting.
+Paths and Location headers are preserved, so WHEP PATCH/DELETE session URLs work
+without a proxy sidecar, rewrite middleware or IngressRoute CRD. Traefik
+terminates HTTPS using the site's existing hostname/certificate; its
 certificate-resolver annotation is configurable. The frontend must not use
-these reserved prefixes for ordinary pages.
+`/contrib` for ordinary pages.
+
+CORS allows the site's own origin. Add `webrtc.allowOrigins` for a player
+embedded in another site.
 
 Use a Read credential in the player or WHEP client's Basic authentication, or
 its `username:password` bearer token. Django sessions are not preview credentials;
