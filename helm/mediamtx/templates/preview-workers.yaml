@@ -1,0 +1,83 @@
+{{- if .Values.preview.enabled }}
+{{- $root := . }}
+{{- range .Values.preview.sources }}
+{{- $source := required "preview.sources[].id must be a source UUID" .id }}
+{{- if not (regexMatch "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" $source) }}
+{{- fail "preview source IDs must be canonical UUIDs" }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mediamtx-preview-{{ $source }}
+  labels:
+    app: mediamtx-preview
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mediamtx-preview
+      source: {{ $source | quote }}
+  template:
+    metadata:
+      labels:
+        app: mediamtx-preview
+        source: {{ $source | quote }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: convert
+          image: {{ $root.Values.preview.image | quote }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          env:
+            - name: STREAM_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "preview sources require a credentialSecret" .credentialSecret }}
+                  key: username
+            - name: STREAM_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .credentialSecret }}
+                  key: password
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              input="rtsp://${STREAM_USERNAME}:${STREAM_PASSWORD}@mediamtx:8554/live/{{ $source }}"
+              output="rtsp://${STREAM_USERNAME}:${STREAM_PASSWORD}@mediamtx:8554/preview/{{ $source }}"
+              trap 'kill "$child" 2>/dev/null; wait "$child" 2>/dev/null; exit 0' TERM INT
+              while true; do
+                # FFmpeg errors can include the credential-bearing URL.
+                # Keep them off cluster logs; path/packet metrics show health.
+                ffmpeg -nostdin -hide_banner -loglevel error \
+                  -rtsp_transport tcp -fflags nobuffer -flags low_delay \
+                  -analyzeduration 250000 -probesize 262144 -i "$input" \
+                  -map 0:v:0 -map '0:a:0?' -c:v copy \
+                  -c:a libopus -application lowdelay \
+                  -frame_duration {{ $root.Values.preview.opusFrameDuration | quote }} \
+                  -b:a {{ $root.Values.preview.opusBitrate | quote }} -ar 48000 -ac 2 \
+                  -flush_packets 1 -muxdelay 0 -rtsp_transport tcp -f rtsp "$output" \
+                  >/dev/null 2>&1 &
+                child=$!
+                wait "$child" || true
+                echo "Preview converter stopped; retrying source in one second"
+                sleep 1 &
+                child=$!
+                wait "$child" || true
+              done
+          resources:
+{{ toYaml $root.Values.preview.resources | indent 12 }}
+{{- end }}
+{{- end }}

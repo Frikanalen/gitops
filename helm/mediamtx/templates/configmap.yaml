@@ -1,0 +1,66 @@
+{{- if and .Values.webrtc.enabled (empty .Values.webrtc.additionalHosts) }}
+{{- fail "webrtc.additionalHosts must contain a reachable public address" }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mediamtx
+  labels:
+    app: mediamtx
+data:
+  mediamtx.yml: |
+    logLevel: info
+    logDestinations: [stdout]
+    authMethod: http
+    authHTTPAddress: {{ required "authURL must point to Django's MediaMTX callback" .Values.authURL | quote }}
+{{- if .Values.monitoring.enabled }}
+    # Metrics are exposed only by an internal ClusterIP Service.
+    authHTTPExclude:
+      - action: metrics
+{{- else }}
+    authHTTPExclude: []
+{{- end }}
+    api: false
+    metrics: {{ .Values.monitoring.enabled }}
+{{- if .Values.monitoring.enabled }}
+    metricsAddress: :9998
+{{- end }}
+    pprof: false
+    playback: false
+    rtsp: true
+    rtspAddress: :8554
+    rtspTransports: [tcp]
+    rtmp: true
+    rtmpAddress: :1935
+    hls: false
+    webrtc: {{ .Values.webrtc.enabled }}
+{{- if .Values.webrtc.enabled }}
+    webrtcAddress: :8889
+    webrtcEncryption: false
+    webrtcAllowOrigins: [{{ printf "https://%s" (required "webrtc.hostname must be configured" .Values.webrtc.hostname) | quote }}]
+    webrtcLocalUDPAddress: :8189
+    webrtcLocalTCPAddress: :8189
+    webrtcIPsFromInterfaces: false
+    webrtcAdditionalHosts: {{ required "webrtc.additionalHosts must contain a reachable public address" .Values.webrtc.additionalHosts | toJson }}
+{{- end }}
+    moq: false
+    srt: true
+    srtAddress: :8890
+    pathDefaults:
+      source: publisher
+      overridePublisher: false
+      record: false
+      # Regex paths support authenticated ingest; fallback requires an
+      # explicit per-source path supplied by the future controller.
+      alwaysAvailable: false
+      alwaysAvailableTracks:
+        - codec: H264
+        - codec: MPEG4Audio
+          sampleRate: 48000
+          channelCount: 2
+    paths:
+{{ toYaml .Values.paths | indent 6 }}
+{{- if .Values.preview.enabled }}
+      "~^preview/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$": {}
+{{- end }}
+
