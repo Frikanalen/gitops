@@ -19,6 +19,9 @@ spec:
         app: mediamtx
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+{{- with .Values.podAnnotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
     spec:
       automountServiceAccountToken: false
       securityContext:

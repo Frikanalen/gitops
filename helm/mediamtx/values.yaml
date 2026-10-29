@@ -5,6 +5,9 @@ image:
 service:
   loadBalancerIP: ""
 authURL: ""
+# Extra pod annotations, e.g. a checksum that rolls the pod when a Secret it
+# reads (such as preview.credentialSecret) is replaced.
+podAnnotations: {}
 resources:
   requests:
     cpu: 100m

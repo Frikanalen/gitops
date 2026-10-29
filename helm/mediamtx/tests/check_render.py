@@ -83,7 +83,10 @@ class RenderTests(unittest.TestCase):
         render("webrtc.enabled=true", "webrtc.hostname=staging.frikanalen.no", succeeds=False)
 
     def test_preview_converts_on_demand_inside_mediamtx_with_secret_credential(self):
-        documents = render("preview.enabled=true", "preview.credentialSecret=preview-converter")
+        documents = render("preview.enabled=true", "preview.credentialSecret=preview-converter",
+                           "podAnnotations.checksum/preview-credential=abc")
+        annotations = find(documents, "Deployment", "mediamtx")["spec"]["template"]["metadata"]["annotations"]
+        self.assertEqual(annotations["checksum/preview-credential"], "abc")
         self.assertFalse(any(d["kind"] == "Deployment" and d["metadata"]["name"] != "mediamtx"
                              for d in documents))
         container = find(documents, "Deployment", "mediamtx")["spec"]["template"]["spec"]["containers"][0]
