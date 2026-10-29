@@ -7,8 +7,8 @@ forwarding. The existing Application name and Kubernetes resource names remain
 
 ## Streams and authentication
 
-- Contributions: `live/<source UUID>`, published over SRT, RTMP or RTSP.
-- Derived browser previews: `preview/<source UUID>`, H.264 plus Opus.
+- Contributions: `contrib/live/<source UUID>`, published over SRT, RTMP or RTSP.
+- Derived browser previews: `contrib/preview/<source UUID>`, H.264 plus Opus.
 - Django authorizes every media connection at `/api/mediamtx/auth`.
 - Publish credentials can publish only the contribution. Read credentials can
   read the contribution and derived preview for their own source.
@@ -23,21 +23,23 @@ those public URLs in Django admin. Anonymous media reads are not enabled.
 ## WebRTC with standard Ingress
 
 Set `webrtc.enabled`, `webrtc.hostname` and `webrtc.additionalHosts` to enable.
-`webrtc.hostname` is a dedicated contribution host (`contrib.frikanalen.no`,
-`contrib.staging.frikanalen.no`) that belongs entirely to MediaMTX:
+`webrtc.hostname` is the site's own hostname; MediaMTX gets `/contrib` on it:
 
-- Player: `https://<contrib host>/preview/<source UUID>/`
-- WHEP: `https://<contrib host>/preview/<source UUID>/whep`
-- Direct original player/WHEP/WHIP: the same native paths under `/live/<UUID>`.
+- Player: `https://<site>/contrib/preview/<source UUID>/`
+- WHEP: `https://<site>/contrib/preview/<source UUID>/whep`
+- Direct original player/WHEP/WHIP: the same native paths under
+  `/contrib/live/<UUID>`.
 
-The standard `networking.k8s.io/v1` Ingress routes `/` on that host to MediaMTX.
-Paths and Location headers pass through unchanged, so WHEP PATCH/DELETE session
-URLs work without a proxy sidecar, rewrite middleware or IngressRoute CRD, and
-the main site reserves no paths. Traefik terminates HTTPS with a certificate for
-the contribution host; its certificate-resolver annotation is configurable.
+Every MediaMTX path starts with `contrib/`, so the standard
+`networking.k8s.io/v1` Ingress forwards the `/contrib` prefix without rewriting.
+Paths and Location headers are preserved, so WHEP PATCH/DELETE session URLs work
+without a proxy sidecar, rewrite middleware or IngressRoute CRD. Traefik
+terminates HTTPS using the site's existing hostname/certificate; its
+certificate-resolver annotation is configurable. The frontend must not use
+`/contrib` for ordinary pages.
 
-CORS allows the contribution host's own origin. Add `webrtc.allowOrigins` (for
-example `https://frikanalen.no`) for a player embedded in another site.
+CORS allows the site's own origin. Add `webrtc.allowOrigins` for a player
+embedded in another site.
 
 Use a Read credential in the player or WHEP client's Basic authentication, or
 its `username:password` bearer token. Django sessions are not preview credentials;
@@ -117,7 +119,7 @@ python helm/mediamtx/tests/check_render.py
 ```
 
 CI exercises monitoring-off, metrics-without-Operator, optional ServiceMonitor,
-dedicated-host WebRTC Ingress, private HTTP/metrics listeners and preview-worker
+standard WebRTC Ingress, private HTTP/metrics listeners and preview-worker
 rendering. Missing callback/IP/candidate/worker-secret settings fail closed.
 
 The initial public staging SRT/RTMP/RTSP test matrix passed with H.264/AAC media:

@@ -61,6 +61,6 @@ data:
     paths:
 {{ toYaml .Values.paths | indent 6 }}
 {{- if .Values.preview.enabled }}
-      "~^preview/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$": {}
+      "~^contrib/preview/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$": {}
 {{- end }}
 

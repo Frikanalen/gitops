@@ -26,9 +26,10 @@ spec:
     - host: {{ .Values.webrtc.hostname | quote }}
       http:
         paths:
-          # The whole contribution host belongs to MediaMTX, so its paths and
-          # WHEP Location/PATCH/DELETE URLs pass through unchanged.
-          - path: /
+          # Every MediaMTX path starts with contrib/, so this one prefix keeps
+          # paths and WHEP Location/PATCH/DELETE URLs unchanged. /contrib is
+          # reserved for streams, not frontend pages.
+          - path: /contrib
             pathType: Prefix
             backend:
               service:
