@@ -26,16 +26,10 @@ spec:
     - host: {{ .Values.webrtc.hostname | quote }}
       http:
         paths:
-          # Preserve MediaMTX paths and WHEP Location/PATCH/DELETE URLs.
-          # These prefixes are reserved for streams, not frontend pages.
-          - path: /live
-            pathType: Prefix
-            backend:
-              service:
-                name: mediamtx-webrtc
-                port:
-                  name: http
-          - path: /preview
+          # Every MediaMTX path starts with contrib/, so this one prefix keeps
+          # paths and WHEP Location/PATCH/DELETE URLs unchanged. /contrib is
+          # reserved for streams, not frontend pages.
+          - path: /contrib
             pathType: Prefix
             backend:
               service:

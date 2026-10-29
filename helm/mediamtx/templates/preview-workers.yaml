@@ -55,8 +55,8 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - |
-              input="rtsp://${STREAM_USERNAME}:${STREAM_PASSWORD}@mediamtx:8554/live/{{ $source }}"
-              output="rtsp://${STREAM_USERNAME}:${STREAM_PASSWORD}@mediamtx:8554/preview/{{ $source }}"
+              input="rtsp://${STREAM_USERNAME}:${STREAM_PASSWORD}@mediamtx:8554/contrib/live/{{ $source }}"
+              output="rtsp://${STREAM_USERNAME}:${STREAM_PASSWORD}@mediamtx:8554/contrib/preview/{{ $source }}"
               trap 'kill "$child" 2>/dev/null; wait "$child" 2>/dev/null; exit 0' TERM INT
               while true; do
                 # FFmpeg errors can include the credential-bearing URL.
