@@ -51,10 +51,11 @@ LoadBalancer. Only the public hostname and reserved LAN address are advertised;
 pod-interface addresses are not. No TURN relay is included. Networks blocking
 both direct transports need a later TURN deployment.
 
-## Low-latency Opus conversion
+## Low-latency VP8 and Opus conversion
 
-Browsers cannot play the contribution's AAC audio, so MediaMTX converts it to
-Opus on demand. When a reader opens `contrib/preview/<source UUID>`, MediaMTX
+Browsers cannot play the contribution's AAC audio, and Firefox plays H.264 only
+with its OpenH264 plugin, so MediaMTX converts the feed to VP8 and Opus on
+demand. When a reader opens `contrib/preview/<source UUID>`, MediaMTX
 starts FFmpeg in its own container. FFmpeg reads `contrib/live/<source UUID>` and
 publishes the preview back over local RTSP. MediaMTX stops it 10 seconds after
 the last reader leaves. New sources need no configuration or restart:
@@ -71,11 +72,13 @@ the MediaMTX pod can connect from loopback, because outside clients arrive
 through the LoadBalancer. Enabling previews swaps the MediaMTX image for its
 `-ffmpeg` build.
 
-The converter copies video (`-c:v copy`) and converts audio to 48kHz stereo Opus.
-It uses restricted low-delay mode, 10ms frames, prompt packet flushing and no
-additional video encode. Short input probing limits startup buffering, but the
-encoder's GOP length still delays the first decodable picture. Source video must
-already be browser-compatible H.264 without B-frames. FFmpeg's warnings go to the
+The converter scales video to 360 lines of VP8 at 1 Mbit/s (`preview.videoHeight`,
+`preview.videoBitrate`) in libvpx's realtime mode, with no lookahead and a
+keyframe every second so a new viewer gets a picture quickly. Audio becomes
+48kHz stereo Opus in restricted low-delay mode with 10ms frames, and packets are
+flushed promptly. The preview shows whether the feed arrives and how it sounds;
+it is not a check of the contribution's picture quality, which the encode
+replaces. The encode costs a fraction of a core per watched source. FFmpeg's warnings go to the
 MediaMTX log, and MediaMTX path metrics show whether a preview is receiving data.
 
 ## Optional Prometheus Operator support
