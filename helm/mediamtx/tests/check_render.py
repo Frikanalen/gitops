@@ -82,24 +82,34 @@ class RenderTests(unittest.TestCase):
         self.assertEqual([c["name"] for c in pod["containers"]], ["mediamtx"])
         render("webrtc.enabled=true", "webrtc.hostname=staging.frikanalen.no", succeeds=False)
 
-    def test_preview_worker_copies_video_uses_opus_and_secret_references(self):
-        source = "11111111-1111-1111-1111-111111111111"
-        documents = render("preview.enabled=true", f"preview.sources[0].id={source}",
-                           "preview.sources[0].credentialSecret=converter-credential")
-        deployment = find(documents, "Deployment", f"mediamtx-preview-{source}")
-        pod = deployment["spec"]["template"]["spec"]
-        self.assertFalse(pod["automountServiceAccountToken"])
-        converter = pod["containers"][0]
-        self.assertTrue(all(e["valueFrom"]["secretKeyRef"]["name"] == "converter-credential"
-                            for e in converter["env"]))
-        script = converter["args"][0]
-        self.assertIn("-c:v copy", script)
-        self.assertIn("-c:a libopus -application lowdelay", script)
-        self.assertIn("-flush_packets 1 -muxdelay 0", script)
-        self.assertIn(f"/contrib/preview/{source}", script)
-        render("preview.enabled=true", "preview.sources[0].id=invalid", succeeds=False)
-        render("preview.enabled=true", f"preview.sources[0].id={source}", succeeds=False)
+    def test_preview_converts_on_demand_inside_mediamtx_with_secret_credential(self):
+        documents = render("preview.enabled=true", "preview.credentialSecret=preview-converter")
+        self.assertFalse(any(d["kind"] == "Deployment" and d["metadata"]["name"] != "mediamtx"
+                             for d in documents))
+        container = find(documents, "Deployment", "mediamtx")["spec"]["template"]["spec"]["containers"][0]
+        self.assertTrue(container["image"].endswith("-ffmpeg"))
+        self.assertEqual({e["name"]: e["valueFrom"]["secretKeyRef"]["name"] for e in container["env"]},
+                         {"PREVIEW_USERNAME": "preview-converter", "PREVIEW_PASSWORD": "preview-converter"})
+        config = yaml.safe_load(find(documents, "ConfigMap", "mediamtx")["data"]["mediamtx.yml"])
+        [(name, path)] = [(k, v) for k, v in config["paths"].items() if "preview" in k]
+        self.assertTrue(name.startswith("~^contrib/preview/("))
+        command = path["runOnDemand"]
+        self.assertIn("-c:v copy", command)
+        self.assertIn("-c:a libopus -application lowdelay", command)
+        self.assertIn("-flush_packets 1 -muxdelay 0", command)
+        self.assertIn("/contrib/live/$G1", command)
+        self.assertIn("/$MTX_PATH", command)
+        self.assertIn(">/dev/null 2>&1", command)
+        self.assertTrue(path["runOnDemandRestart"])
+        render("preview.enabled=true", succeeds=False)
 
+    def test_without_preview_the_plain_image_runs_and_no_preview_path_exists(self):
+        documents = render()
+        container = find(documents, "Deployment", "mediamtx")["spec"]["template"]["spec"]["containers"][0]
+        self.assertFalse(container["image"].endswith("-ffmpeg"))
+        self.assertNotIn("env", container)
+        config = yaml.safe_load(find(documents, "ConfigMap", "mediamtx")["data"]["mediamtx.yml"])
+        self.assertFalse(any("preview" in k for k in config["paths"]))
 
 if __name__ == "__main__":
     unittest.main()

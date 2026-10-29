@@ -30,9 +30,27 @@ spec:
           type: RuntimeDefault
       containers:
         - name: mediamtx
+{{- if .Values.preview.enabled }}
+          # The on-demand Opus converter runs FFmpeg inside this container.
+          image: {{ .Values.preview.image | quote }}
+{{- else }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+{{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args: ["/mediamtx.yml"]
+{{- if .Values.preview.enabled }}
+          env:
+            - name: PREVIEW_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "preview.credentialSecret must name the converter's Secret" .Values.preview.credentialSecret }}
+                  key: username
+            - name: PREVIEW_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.preview.credentialSecret }}
+                  key: password
+{{- end }}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

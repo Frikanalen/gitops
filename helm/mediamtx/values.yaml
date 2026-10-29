@@ -32,19 +32,18 @@ webrtc:
 
 preview:
   enabled: false
+  # Replaces image above while enabled: the same MediaMTX build plus FFmpeg.
   image: bluenviron/mediamtx:1.21.3-ffmpeg
-  # Source UUID plus a Secret with username/password from a Django
-  # "Preview conversion worker" credential. No passwords in Helm values.
-  sources: []
+  # Secret with username/password of Django's "Preview converter (all enabled
+  # sources)" credential (manage.py ensure_preview_credential). No passwords
+  # in Helm values.
+  credentialSecret: ""
   opusBitrate: 96k
   opusFrameDuration: 10
-  resources:
-    requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
-      cpu: "1"
-      memory: 256Mi
+  # How long a reader waits for the converter's first packets, and how long
+  # the converter outlives its last reader.
+  startTimeout: 5s
+  closeAfter: 10s
 
 monitoring:
   enabled: false

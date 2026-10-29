@@ -61,6 +61,28 @@ data:
     paths:
 {{ toYaml .Values.paths | indent 6 }}
 {{- if .Values.preview.enabled }}
-      "~^contrib/preview/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$": {}
+      # Converted only while someone watches: MediaMTX starts FFmpeg when a
+      # reader opens a preview and stops it once the last one leaves. The
+      # converter reads the original and publishes back over local RTSP with
+      # the "Preview converter (all enabled sources)" credential, which Django
+      # limits to enabled sources. $G1 is the source UUID; the credential
+      # comes from the container environment. Output is discarded because
+      # FFmpeg errors can include the credential-bearing URLs.
+      "~^contrib/preview/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$":
+        runOnDemand: >-
+          sh -c 'exec ffmpeg -nostdin -hide_banner -loglevel quiet
+          -rtsp_transport tcp -fflags nobuffer -flags low_delay
+          -analyzeduration 250000 -probesize 262144
+          -i "rtsp://$PREVIEW_USERNAME:$PREVIEW_PASSWORD@127.0.0.1:$RTSP_PORT/contrib/live/$G1"
+          -map 0:v:0 -map 0:a:0? -c:v copy
+          -c:a libopus -application lowdelay
+          -frame_duration {{ .Values.preview.opusFrameDuration }}
+          -b:a {{ .Values.preview.opusBitrate }} -ar 48000 -ac 2
+          -flush_packets 1 -muxdelay 0 -rtsp_transport tcp
+          -f rtsp "rtsp://$PREVIEW_USERNAME:$PREVIEW_PASSWORD@127.0.0.1:$RTSP_PORT/$MTX_PATH"
+          >/dev/null 2>&1'
+        runOnDemandRestart: true
+        runOnDemandStartTimeout: {{ .Values.preview.startTimeout | quote }}
+        runOnDemandCloseAfter: {{ .Values.preview.closeAfter | quote }}
 {{- end }}
 
