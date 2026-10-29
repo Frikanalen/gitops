@@ -1,0 +1,50 @@
+image:
+  repository: bluenviron/mediamtx
+  tag: "1.21.3"
+  pullPolicy: IfNotPresent
+service:
+  loadBalancerIP: ""
+authURL: ""
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+
+# Django authorizes each exact path. An explicit UUID path can later override
+# this with alwaysAvailable: true; MediaMTX forbids fallback on regex paths.
+paths:
+  "~^live/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$": {}
+
+webrtc:
+  enabled: false
+  hostname: ""
+  ingressClassName: public
+  certResolver: letsencrypt
+  additionalHosts: []
+
+preview:
+  enabled: false
+  image: bluenviron/mediamtx:1.21.3-ffmpeg
+  # Source UUID plus a Secret with username/password from a Django
+  # "Preview conversion worker" credential. No passwords in Helm values.
+  sources: []
+  opusBitrate: 96k
+  opusFrameDuration: 10
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: "1"
+      memory: 256Mi
+
+monitoring:
+  enabled: false
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    scrapeTimeout: 10s
+    additionalLabels: {}
