@@ -22,18 +22,22 @@ those public URLs in Django admin. Anonymous media reads are not enabled.
 
 ## WebRTC with standard Ingress
 
-Set `webrtc.enabled`, `webrtc.hostname` and `webrtc.additionalHosts` to enable:
+Set `webrtc.enabled`, `webrtc.hostname` and `webrtc.additionalHosts` to enable.
+`webrtc.hostname` is a dedicated contribution host (`contrib.frikanalen.no`,
+`contrib.staging.frikanalen.no`) that belongs entirely to MediaMTX:
 
-- Player: `https://<site>/preview/<source UUID>/`
-- WHEP: `https://<site>/preview/<source UUID>/whep`
+- Player: `https://<contrib host>/preview/<source UUID>/`
+- WHEP: `https://<contrib host>/preview/<source UUID>/whep`
 - Direct original player/WHEP/WHIP: the same native paths under `/live/<UUID>`.
 
-The standard `networking.k8s.io/v1` Ingress reserves `/live` and `/preview` for
-MediaMTX. It preserves paths and Location headers, so WHEP PATCH/DELETE session
-URLs work without a proxy sidecar, rewrite middleware or IngressRoute CRD.
-Traefik terminates HTTPS using the site's existing hostname/certificate. Its
-certificate-resolver annotation is configurable. The frontend must not use
-these reserved prefixes for ordinary pages.
+The standard `networking.k8s.io/v1` Ingress routes `/` on that host to MediaMTX.
+Paths and Location headers pass through unchanged, so WHEP PATCH/DELETE session
+URLs work without a proxy sidecar, rewrite middleware or IngressRoute CRD, and
+the main site reserves no paths. Traefik terminates HTTPS with a certificate for
+the contribution host; its certificate-resolver annotation is configurable.
+
+CORS allows the contribution host's own origin. Add `webrtc.allowOrigins` (for
+example `https://frikanalen.no`) for a player embedded in another site.
 
 Use a Read credential in the player or WHEP client's Basic authentication, or
 its `username:password` bearer token. Django sessions are not preview credentials;
@@ -113,7 +117,7 @@ python helm/mediamtx/tests/check_render.py
 ```
 
 CI exercises monitoring-off, metrics-without-Operator, optional ServiceMonitor,
-standard WebRTC Ingress, private HTTP/metrics listeners and preview-worker
+dedicated-host WebRTC Ingress, private HTTP/metrics listeners and preview-worker
 rendering. Missing callback/IP/candidate/worker-secret settings fail closed.
 
 The initial public staging SRT/RTMP/RTSP test matrix passed with H.264/AAC media:

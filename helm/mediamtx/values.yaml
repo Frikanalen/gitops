@@ -20,7 +20,12 @@ paths:
 
 webrtc:
   enabled: false
+  # Dedicated contribution hostname, e.g. contrib.frikanalen.no. The Ingress
+  # sends the whole host to MediaMTX, so no site paths are reserved.
   hostname: ""
+  # Extra browser origins allowed to call WHEP/WHIP, e.g. the main site once
+  # it embeds a player. The hostname's own origin is always allowed.
+  allowOrigins: []
   ingressClassName: public
   certResolver: letsencrypt
   additionalHosts: []

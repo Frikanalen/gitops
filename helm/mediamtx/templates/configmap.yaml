@@ -37,7 +37,7 @@ data:
 {{- if .Values.webrtc.enabled }}
     webrtcAddress: :8889
     webrtcEncryption: false
-    webrtcAllowOrigins: [{{ printf "https://%s" (required "webrtc.hostname must be configured" .Values.webrtc.hostname) | quote }}]
+    webrtcAllowOrigins: {{ prepend .Values.webrtc.allowOrigins (printf "https://%s" (required "webrtc.hostname must be configured" .Values.webrtc.hostname)) | toJson }}
     webrtcLocalUDPAddress: :8189
     webrtcLocalTCPAddress: :8189
     webrtcIPsFromInterfaces: false

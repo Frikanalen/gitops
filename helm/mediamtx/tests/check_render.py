@@ -56,21 +56,24 @@ class RenderTests(unittest.TestCase):
         render("monitoring.serviceMonitor.enabled=true", succeeds=False)
 
     def test_webrtc_has_https_signaling_and_public_ice_but_no_public_http_port(self):
-        documents = render("webrtc.enabled=true", "webrtc.hostname=staging.frikanalen.no",
-                           "webrtc.additionalHosts[0]=staging.frikanalen.no")
+        documents = render("webrtc.enabled=true", "webrtc.hostname=contrib.staging.frikanalen.no",
+                           "webrtc.additionalHosts[0]=staging.frikanalen.no",
+                           "webrtc.allowOrigins[0]=https://staging.frikanalen.no")
         configmap = find(documents, "ConfigMap", "mediamtx")["data"]
         config = yaml.safe_load(configmap["mediamtx.yml"])
         self.assertFalse(config["webrtcIPsFromInterfaces"])
         self.assertEqual(config["webrtcAdditionalHosts"], ["staging.frikanalen.no"])
+        self.assertEqual(config["webrtcAllowOrigins"],
+                         ["https://contrib.staging.frikanalen.no", "https://staging.frikanalen.no"])
         self.assertNotIn("nginx.conf", configmap)
         ports = find(documents, "Service", "mediamtx")["spec"]["ports"]
         self.assertEqual({p["protocol"] for p in ports if p["port"] == 8189}, {"UDP", "TCP"})
         self.assertFalse(any(p["port"] in (8889, 8080, 9998) for p in ports))
         ingress = find(documents, "Ingress", "mediamtx-webrtc")
-        self.assertEqual(ingress["spec"]["tls"][0]["hosts"], ["staging.frikanalen.no"])
-        paths = ingress["spec"]["rules"][0]["http"]["paths"]
-        self.assertEqual({p["path"] for p in paths}, {"/live", "/preview"})
-        self.assertTrue(all(p["pathType"] == "Prefix" for p in paths))
+        self.assertEqual(ingress["spec"]["tls"][0]["hosts"], ["contrib.staging.frikanalen.no"])
+        rule = ingress["spec"]["rules"][0]
+        self.assertEqual(rule["host"], "contrib.staging.frikanalen.no")
+        self.assertEqual([(p["path"], p["pathType"]) for p in rule["http"]["paths"]], [("/", "Prefix")])
         self.assertFalse(any(d["apiVersion"].startswith("traefik.io/") for d in documents))
         pod = find(documents, "Deployment", "mediamtx")["spec"]["template"]["spec"]
         self.assertEqual([c["name"] for c in pod["containers"]], ["mediamtx"])
