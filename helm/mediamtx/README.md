@@ -8,7 +8,7 @@ forwarding. The existing Application name and Kubernetes resource names remain
 ## Streams and authentication
 
 - Contributions: `contrib/live/<source UUID>`, published over SRT, RTMP or RTSP.
-- Derived browser previews: `contrib/preview/<source UUID>`, H.264 plus Opus.
+- Derived browser previews: `contrib/preview/<source UUID>`, VP8 plus Opus.
 - Django authorizes every media connection at `/api/mediamtx/auth`.
 - Publish credentials can publish only the contribution. Read credentials can
   read the contribution and derived preview for their own source.
@@ -51,10 +51,11 @@ LoadBalancer. Only the public hostname and reserved LAN address are advertised;
 pod-interface addresses are not. No TURN relay is included. Networks blocking
 both direct transports need a later TURN deployment.
 
-## Low-latency Opus conversion
+## Low-latency VP8 and Opus conversion
 
-Browsers cannot play the contribution's AAC audio, so MediaMTX converts it to
-Opus on demand. When a reader opens `contrib/preview/<source UUID>`, MediaMTX
+Browsers cannot play the contribution's AAC audio, and not every browser can
+play its H.264 (Firefox needs the OpenH264 plugin), so MediaMTX converts it to
+VP8 and Opus on demand. When a reader opens `contrib/preview/<source UUID>`, MediaMTX
 starts FFmpeg in its own container. FFmpeg reads `contrib/live/<source UUID>` and
 publishes the preview back over local RTSP. MediaMTX stops it 10 seconds after
 the last reader leaves. New sources need no configuration or restart:
@@ -71,12 +72,15 @@ the MediaMTX pod can connect from loopback, because outside clients arrive
 through the LoadBalancer. Enabling previews swaps the MediaMTX image for its
 `-ffmpeg` build.
 
-The converter copies video (`-c:v copy`) and converts audio to 48kHz stereo Opus.
-It uses restricted low-delay mode, 10ms frames, prompt packet flushing and no
-additional video encode. Short input probing limits startup buffering, but the
-encoder's GOP length still delays the first decodable picture. Source video must
-already be browser-compatible H.264 without B-frames. FFmpeg's warnings go to the
-MediaMTX log, and MediaMTX path metrics show whether a preview is receiving data.
+The converter scales video to 360p at 25fps and encodes realtime VP8, which
+every WebRTC browser must support. It uses no lookahead or alt-ref frames, so
+the encode adds little delay, and a keyframe every 2 seconds bounds how long a
+new viewer waits for a picture (`videoHeight`, `videoFps`, `videoBitrate`,
+`videoGop`). Audio becomes 48kHz stereo Opus in restricted low-delay mode with
+10ms frames and prompt packet flushing. Short input probing limits startup
+buffering. Each watched source costs a fraction of a CPU core while the converter
+runs. FFmpeg's warnings go to the MediaMTX log, and MediaMTX path metrics show
+whether a preview is receiving data.
 
 ## Optional Prometheus Operator support
 

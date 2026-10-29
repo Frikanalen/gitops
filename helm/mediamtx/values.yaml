@@ -34,6 +34,13 @@ preview:
   enabled: false
   # Replaces image above while enabled: the same MediaMTX build plus FFmpeg.
   image: bluenviron/mediamtx:1.21.3-ffmpeg
+  # VP8 plays in every WebRTC browser, including Firefox without OpenH264.
+  # Realtime libvpx at preview size costs a fraction of a core per watched
+  # source. gop is in frames: a new viewer waits at most gop/fps seconds.
+  videoHeight: 360
+  videoFps: 25
+  videoBitrate: 800k
+  videoGop: 50
   opusBitrate: 96k
   opusFrameDuration: 10
   # How long a reader waits for the converter's first packets, and how long

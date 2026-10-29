@@ -93,7 +93,8 @@ class RenderTests(unittest.TestCase):
         [(name, path)] = [(k, v) for k, v in config["paths"].items() if "preview" in k]
         self.assertTrue(name.startswith("~^contrib/preview/("))
         command = path["runOnDemand"]
-        self.assertIn("-c:v copy", command)
+        self.assertIn("-c:v libvpx -deadline realtime", command)
+        self.assertIn("-lag-in-frames 0", command)
         self.assertIn("-c:a libopus -application lowdelay", command)
         self.assertIn("-flush_packets 1 -muxdelay 0", command)
         # Loopback, so Django can recognise the converter without a credential.
