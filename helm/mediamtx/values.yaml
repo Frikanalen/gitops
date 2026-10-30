@@ -38,6 +38,17 @@ preview:
   # OpenH264 plugin, so the preview is a small VP8 copy of the picture.
   videoHeight: 360
   videoBitrate: 1M
+  videoFps: 25
+  # Each watched source decodes its contribution and encodes VP8, about one
+  # core for 1080p; at the plain limit of one core the converter fell behind
+  # and MediaMTX dropped its input. Replaces resources above while enabled.
+  resources:
+    requests:
+      cpu: 500m
+      memory: 256Mi
+    limits:
+      cpu: "4"
+      memory: 1Gi
   opusBitrate: 96k
   opusFrameDuration: 10
   # How long a reader waits for the converter's first packets, and how long

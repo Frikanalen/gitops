@@ -78,7 +78,10 @@ keyframe every second so a new viewer gets a picture quickly. Audio becomes
 48kHz stereo Opus in restricted low-delay mode with 10ms frames, and packets are
 flushed promptly. The preview shows whether the feed arrives and how it sounds;
 it is not a check of the contribution's picture quality, which the encode
-replaces. The encode costs a fraction of a core per watched source. FFmpeg's warnings go to the
+replaces. Decoding a 1080p contribution and encoding the preview takes about
+one core per watched source, so enabling previews also swaps `resources` for
+`preview.resources` (a 4-core limit). Both decoder and encoder use two threads,
+and the preview is capped at `preview.videoFps` (25). FFmpeg's warnings go to the
 MediaMTX log, and MediaMTX path metrics show whether a preview is receiving data.
 
 ## Optional Prometheus Operator support
