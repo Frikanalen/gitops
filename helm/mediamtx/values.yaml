@@ -13,6 +13,12 @@ resources:
     cpu: "1"
     memory: 512Mi
 
+# Packets MediaMTX queues for each reader before discarding (a power of two).
+# Unset keeps MediaMTX's 512, about half a second of a 10 Mbit/s feed. A
+# contribution arriving in bursts over the internet needs more, or a reader
+# that plays in real time, like CasparCG, loses frames to "reader is too slow".
+writeQueueSize: null
+
 # Django authorizes each exact path. All paths live under contrib/ so the
 # WebRTC Ingress needs a single prefix on the site's hostname. An explicit UUID path can later override
 # this with alwaysAvailable: true; MediaMTX forbids fallback on regex paths.

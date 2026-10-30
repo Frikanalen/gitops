@@ -112,5 +112,12 @@ class RenderTests(unittest.TestCase):
         config = yaml.safe_load(find(documents, "ConfigMap", "mediamtx")["data"]["mediamtx.yml"])
         self.assertFalse(any("preview" in k for k in config["paths"]))
 
+    def test_write_queue_size_is_set_only_when_given(self):
+        config = yaml.safe_load(find(render(), "ConfigMap", "mediamtx")["data"]["mediamtx.yml"])
+        self.assertNotIn("writeQueueSize", config)
+        documents = render("writeQueueSize=8192")
+        config = yaml.safe_load(find(documents, "ConfigMap", "mediamtx")["data"]["mediamtx.yml"])
+        self.assertEqual(config["writeQueueSize"], 8192)
+
 if __name__ == "__main__":
     unittest.main()

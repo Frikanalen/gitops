@@ -11,6 +11,9 @@ data:
   mediamtx.yml: |
     logLevel: info
     logDestinations: [stdout]
+{{- with .Values.writeQueueSize }}
+    writeQueueSize: {{ . }}
+{{- end }}
     authMethod: http
     authHTTPAddress: {{ required "authURL must point to Django's MediaMTX callback" .Values.authURL | quote }}
 {{- if .Values.monitoring.enabled }}
