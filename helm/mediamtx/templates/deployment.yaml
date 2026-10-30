@@ -80,7 +80,11 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
           resources:
+{{- if .Values.preview.enabled }}
+{{ toYaml .Values.preview.resources | indent 12 }}
+{{- else }}
 {{ toYaml .Values.resources | indent 12 }}
+{{- end }}
           volumeMounts:
             - name: config
               mountPath: /mediamtx.yml
