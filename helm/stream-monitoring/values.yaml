@@ -6,7 +6,7 @@ image:
   pullPolicy: IfNotPresent
 
 stream:
-  url: http://simula.frikanalen.no:9094/frikanalen.ts
+  url: http://simula.frikanalen.tv:9094/frikanalen.ts
   # Strings prevent YAML/Helm from rendering these CLI arguments in scientific notation.
   probeSize: "5000000"
   analyzeDuration: "5000000"

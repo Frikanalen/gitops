@@ -56,23 +56,23 @@ class RenderTests(unittest.TestCase):
         render("monitoring.serviceMonitor.enabled=true", succeeds=False)
 
     def test_webrtc_has_https_signaling_and_public_ice_but_no_public_http_port(self):
-        documents = render("webrtc.enabled=true", "webrtc.hostname=staging.frikanalen.no",
-                           "webrtc.additionalHosts[0]=staging.frikanalen.no",
+        documents = render("webrtc.enabled=true", "webrtc.hostname=staging.frikanalen.tv",
+                           "webrtc.additionalHosts[0]=staging.frikanalen.tv",
                            "webrtc.allowOrigins[0]=https://example.org")
         configmap = find(documents, "ConfigMap", "mediamtx")["data"]
         config = yaml.safe_load(configmap["mediamtx.yml"])
         self.assertFalse(config["webrtcIPsFromInterfaces"])
-        self.assertEqual(config["webrtcAdditionalHosts"], ["staging.frikanalen.no"])
+        self.assertEqual(config["webrtcAdditionalHosts"], ["staging.frikanalen.tv"])
         self.assertEqual(config["webrtcAllowOrigins"],
-                         ["https://staging.frikanalen.no", "https://example.org"])
+                         ["https://staging.frikanalen.tv", "https://example.org"])
         self.assertNotIn("nginx.conf", configmap)
         ports = find(documents, "Service", "mediamtx")["spec"]["ports"]
         self.assertEqual({p["protocol"] for p in ports if p["port"] == 8189}, {"UDP", "TCP"})
         self.assertFalse(any(p["port"] in (8889, 8080, 9998) for p in ports))
         ingress = find(documents, "Ingress", "mediamtx-webrtc")
-        self.assertEqual(ingress["spec"]["tls"][0]["hosts"], ["staging.frikanalen.no"])
+        self.assertEqual(ingress["spec"]["tls"][0]["hosts"], ["staging.frikanalen.tv"])
         rule = ingress["spec"]["rules"][0]
-        self.assertEqual(rule["host"], "staging.frikanalen.no")
+        self.assertEqual(rule["host"], "staging.frikanalen.tv")
         self.assertEqual([(p["path"], p["pathType"]) for p in rule["http"]["paths"]],
                          [("/contrib", "Prefix")])
         config_paths = set(config["paths"])
@@ -80,7 +80,7 @@ class RenderTests(unittest.TestCase):
         self.assertFalse(any(d["apiVersion"].startswith("traefik.io/") for d in documents))
         pod = find(documents, "Deployment", "mediamtx")["spec"]["template"]["spec"]
         self.assertEqual([c["name"] for c in pod["containers"]], ["mediamtx"])
-        render("webrtc.enabled=true", "webrtc.hostname=staging.frikanalen.no", succeeds=False)
+        render("webrtc.enabled=true", "webrtc.hostname=staging.frikanalen.tv", succeeds=False)
 
     def test_preview_converts_on_demand_inside_mediamtx_without_credentials(self):
         documents = render("preview.enabled=true")
